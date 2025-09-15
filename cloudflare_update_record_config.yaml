@@ -1,0 +1,9 @@
+# Cloudflare API keys
+read_token: spacelift
+edit_token: spacelift
+# Reccords to update
+records:
+ - zone_name: "bim42.com"
+   record_name: "mediasm"
+ - zone_name: "bim42.com"
+   record_name: "mediasm"
