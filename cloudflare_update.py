@@ -152,17 +152,37 @@ def main(ip_version, record_type, args):
             ip_different = True
         if ip_different:
             config = get_config(args.config)
-            check_config(config, args.config)
-            zone_identifier, record_identifier, record_ip = get_identifiers(config, record_type)
-            if current_ip_address != record_ip:
-                update_record(config, current_ip_address, record_type, zone_identifier, record_identifier)
-                write_ip(current_ip_address, ip_version)
-            elif current_ip_address == record_ip and args.force:
-                logging.warning(f'Force parameter is set. Setting IP address "{current_ip_address}" even though it is equal to IP of DNS record "{config["record_name"]}" in zone "{config["zone_name"]}" already.')
-                update_record(config, current_ip_address, record_type, zone_identifier, record_identifier)
-                write_ip(current_ip_address, ip_version)
+            # If config contains 'records', loop over each record
+            if 'records' in config:
+                for record in config['records']:
+                    # Build a per-record config dict
+                    record_config = config.copy()
+                    record_config['zone_name'] = record['zone_name']
+                    record_config['record_name'] = record['record_name']
+                    check_config(record_config, args.config)
+                    zone_identifier, record_identifier, record_ip = get_identifiers(record_config, record_type)
+                    if current_ip_address != record_ip:
+                        update_record(record_config, current_ip_address, record_type, zone_identifier, record_identifier)
+                        write_ip(current_ip_address, ip_version)
+                    elif current_ip_address == record_ip and args.force:
+                        logging.warning(f'Force parameter is set. Setting IP address "{current_ip_address}" even though it is equal to IP of DNS record "{record_config["record_name"]}" in zone "{record_config["zone_name"]}" already.')
+                        update_record(record_config, current_ip_address, record_type, zone_identifier, record_identifier)
+                        write_ip(current_ip_address, ip_version)
+                    else:
+                        logging.info(f'Current IPv{ip_version} address "{current_ip_address}" is equal to IP of DNS record "{record_config["record_name"]}" in zone "{record_config["zone_name"]}" already: "{record_ip}". Skipping...')
             else:
-                logging.info(f'Current IPv{ip_version} address "{current_ip_address}" is equal to IP of DNS record "{config["record_name"]}" in zone "{config["zone_name"]}" already: "{record_ip}". Exiting...')
+                # Fallback: single record config
+                check_config(config, args.config)
+                zone_identifier, record_identifier, record_ip = get_identifiers(config, record_type)
+                if current_ip_address != record_ip:
+                    update_record(config, current_ip_address, record_type, zone_identifier, record_identifier)
+                    write_ip(current_ip_address, ip_version)
+                elif current_ip_address == record_ip and args.force:
+                    logging.warning(f'Force parameter is set. Setting IP address "{current_ip_address}" even though it is equal to IP of DNS record "{config["record_name"]}" in zone "{config["zone_name"]}" already.')
+                    update_record(config, current_ip_address, record_type, zone_identifier, record_identifier)
+                    write_ip(current_ip_address, ip_version)
+                else:
+                    logging.info(f'Current IPv{ip_version} address "{current_ip_address}" is equal to IP of DNS record "{config["record_name"]}" in zone "{config["zone_name"]}" already: "{record_ip}". Exiting...')
         else:
             logging.info(f'IPv{ip_version} address has not changed. Exiting...')
 
