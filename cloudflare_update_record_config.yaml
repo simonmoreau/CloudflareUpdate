@@ -7,7 +7,7 @@ records:
  - zone_name: "bim42.com"
    record_name: "jellyfin"
  - zone_name: "bim42.com"
-   record_name: "komba"
+   record_name: "komga"
  - zone_name: "bim42.com"
    record_name: "librechat"
  - zone_name: "bim42.com"
